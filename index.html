@@ -1,96 +1,1014 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HackIE³</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hackie3</title>
+  <style>
+    :root{
+      --bg:#050509;
+      --text:#f4f4f8;
+      --muted:#9a9ab3;
+      --accent:#00ff9d;
+      --border:rgba(255,255,255,.08);
+      --shadow:0 0 12px var(--accent), 0 0 40px rgba(0,255,157,.18);
+      --scanline:linear-gradient(to bottom, rgba(255,255,255,.02) 1px, rgba(0,0,0,.02) 2px);
+      --fast:.25s ease-out;
+      --med:.4s ease-in-out;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{
+      width:100%;
+      min-height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"SFMono-Regular",Consolas,"Fira Code",monospace;
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:var(--scanline);
+      background-size:100% 3px;
+      opacity:.28;
+      mix-blend-mode:soft-light;
+      z-index:0;
+    }
+
+    .hero-video-wrapper{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      overflow:hidden;
+      pointer-events:none;
+      background:#000;
+    }
+
+    #heroVideo{
+      position:absolute;
+      top:50%;
+      left:50%;
+      width:100vw;
+      height:100vh;
+      object-fit:cover;
+      transform:translate(-50%,-50%);
+      filter:brightness(.75) contrast(1.05) saturate(1.1) blur(1.5px);
+    }
+
+    .hero-overlay-gradient{
+      position:fixed;
+      inset:0;
+      z-index:-2;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at top left, rgba(0,0,0,.24), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(0,0,0,.78), transparent 58%);
+    }
+
+    .app-root{
+      position:relative;
+      z-index:1;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .top-nav{
+      position:sticky;
+      top:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:.75rem 1.75rem;
+      background:rgba(3,3,7,.92);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-brand{
+      display:flex;
+      align-items:center;
+      gap:.75rem;
+      font-weight:700;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-size:.85rem;
+    }
+    .nav-logo-square{
+      width:26px;height:26px;border-radius:6px;
+      border:1px solid var(--accent);
+      box-shadow:var(--shadow);
+      display:flex;align-items:center;justify-content:center;
+      font-size:.7rem;
+    }
+    .nav-tabs{
+      display:flex;gap:.5rem;
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav-tab{
+      position:relative;
+      padding:.4rem .95rem;
+      border-radius:999px;
+      border:1px solid transparent;
+      color:var(--muted);
+      cursor:pointer;
+      background:transparent;
+      transition:all var(--fast);
+    }
+    .nav-tab:hover{
+      color:var(--text);
+      border-color:rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+    }
+    .nav-tab.active{
+      color:#050509;
+      background:var(--accent);
+      border-color:var(--accent);
+      box-shadow:var(--shadow);
+    }
+
+    .views{position:relative;flex:1;min-height:0}
+    .view{display:none;min-height:calc(100vh - 140px)}
+    .view.active{display:block}
+
+    .hero-root{
+      position:relative;
+      min-height:calc(100vh - 60px);
+      background:transparent;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    .config-panel{
+      position:absolute;
+      top:1.25rem;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:2;
+      display:flex;
+      gap:.75rem;
+      padding:.5rem .9rem;
+      border-radius:999px;
+      background:rgba(5,5,11,.92);
+      border:1px solid rgba(255,255,255,.06);
+      backdrop-filter:blur(18px);
+      font-size:.72rem;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+      color:var(--muted);
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .config-group{display:flex;align-items:center;gap:.3rem}
+    .config-group label{opacity:.8}
+    .config-input,.config-select,.config-textarea{
+      background:rgba(0,0,0,.55);
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      color:#f5f5f8;
+      font-size:.7rem;
+    }
+    .config-input,.config-select{padding:.2rem .55rem;min-width:60px}
+    .config-textarea{
+      padding:.3rem .5rem;
+      resize:none;
+      min-width:160px;
+      height:2.1rem;
+      border-radius:8px;
+    }
+
+    .hero-content{
+      position:relative;
+      z-index:1;
+      display:grid;
+      grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+      align-items:stretch;
+      min-height:calc(100vh - 60px);
+      padding:4.5rem clamp(1.5rem,4vw,4rem) 3.5rem;
+      gap:2rem;
+      opacity:1;
+      transition:opacity var(--med), transform var(--med);
+    }
+    .hero-content.fading{
+      opacity:0;
+      transform:translateY(6px);
+    }
+    @media (max-width:900px){
+      .hero-content{grid-template-columns:1fr;padding-top:3.25rem}
+      .config-panel{position:static;transform:none;margin:0 1rem .75rem}
+    }
+
+    .hero-left{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      max-width:720px;
+    }
+    .hero-label{
+      display:inline-flex;align-items:center;gap:.5rem;
+      font-size:.7rem;text-transform:uppercase;letter-spacing:.22em;
+      margin-bottom:.75rem;color:var(--muted)
+    }
+    .hero-label-dot{
+      width:8px;height:8px;border-radius:999px;background:var(--accent);
+      box-shadow:0 0 12px var(--accent)
+    }
+    .hero-title{
+      font-size:clamp(2.6rem,5vw,3.6rem);
+      text-transform:uppercase;
+      letter-spacing:.32em;
+      margin-bottom:.2rem;
+      font-weight:800;
+    }
+    .hero-subtitle{
+      font-size:.95rem;
+      text-transform:uppercase;
+      letter-spacing:.22em;
+      color:var(--muted);
+      margin-bottom:1.4rem;
+    }
+    .hero-description{
+      font-size:.95rem;
+      line-height:1.6;
+      max-width:32rem;
+      color:#d0d0e2;
+      margin-bottom:1.9rem;
+    }
+
+    .hero-ctas{display:flex;flex-wrap:wrap;gap:.85rem;margin-bottom:2.2rem}
+    .btn{
+      border-radius:999px;
+      padding:.75rem 1.6rem;
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      border:1px solid rgba(255,255,255,.3);
+      background:transparent;
+      cursor:pointer;
+      color:#f5f5f8;
+      transition:all var(--fast);
+      position:relative;
+      overflow:hidden;
+      white-space:nowrap;
+      display:inline-flex;align-items:center;justify-content:center;
+    }
+    .btn span{position:relative;z-index:1}
+    .btn::before{
+      content:"";
+      position:absolute;inset:0;
+      background:linear-gradient(120deg, rgba(255,255,255,.14), transparent 45%);
+      transform:translateX(-100%);
+      transition:transform .5s ease;
+      opacity:.35;
+    }
+    .btn:hover::before{transform:translateX(100%)}
+    .btn-outline{background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.6)}
+    .btn-filled{background:#f5f5f9;color:#050509;border-color:#f5f5f9;box-shadow:0 0 18px rgba(255,255,255,.35)}
+    .btn-register{
+      border-color:var(--accent);
+      color:var(--accent);
+      background:rgba(0,0,0,.78);
+      box-shadow:var(--shadow);
+    }
+
+    .hero-socials{display:flex;gap:.85rem;align-items:center;font-size:.85rem;color:var(--muted)}
+    .hero-socials a{
+      width:30px;height:30px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.35);
+      display:flex;align-items:center;justify-content:center;
+      color:#f5f5f8;text-decoration:none;transition:all var(--fast)
+    }
+    .hero-socials a:hover{
+      border-color:var(--accent);
+      color:var(--accent);
+      box-shadow:0 0 12px rgba(0,255,170,.45);
+      transform:translateY(-1px);
+    }
+
+    .hero-right{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      pointer-events:none;
+    }
+    .variant-panel{pointer-events:auto;display:flex;flex-direction:column;align-items:flex-end;gap:1.2rem}
+    .variant-index{
+      font-size:clamp(2rem,4vw,3rem);
+      font-weight:700;
+      letter-spacing:.3em;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.6);
+    }
+    .variant-index span{
+      color:var(--accent);
+      text-shadow:0 0 16px var(--accent);
+    }
+    .variant-nav{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:.6rem;
+      font-size:.75rem;
+      text-transform:uppercase;
+      letter-spacing:.28em;
+      color:var(--muted);
+    }
+    .variant-line{
+      width:1px;height:72px;
+      background:linear-gradient(to bottom, transparent, rgba(255,255,255,.8), transparent);
+      position:relative;overflow:hidden;
+    }
+    .variant-line::before{
+      content:"";
+      position:absolute;left:0;
+      width:100%;height:50%;top:-50%;
+      background:linear-gradient(to bottom, transparent, var(--accent));
+      animation:linePulse 2.2s linear infinite;
+    }
+    @keyframes linePulse{0%{transform:translateY(0)}100%{transform:translateY(200%)}}
+    .variant-nav-btn{
+      cursor:pointer;
+      padding:.1rem .4rem;
+      border-radius:999px;
+      border:1px solid transparent;
+      display:flex;align-items:center;gap:.4rem;
+      transition:all var(--fast);
+      background:transparent;
+      color:inherit;
+    }
+    .variant-nav-btn:hover{
+      border-color:rgba(255,255,255,.3);
+      color:#f5f5f8;
+      background:rgba(0,0,0,.4);
+    }
+
+    .tab-inner{
+      min-height:calc(100vh - 120px);
+      padding:3.5rem clamp(1.5rem,4vw,4rem);
+      display:flex;
+      flex-direction:column;
+      gap:2.4rem;
+      background:
+        radial-gradient(circle at top left, rgba(0,255,170,.2), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(90,0,255,.28), transparent 60%),
+        #050509;
+    }
+    .tab-header{
+      display:flex;flex-wrap:wrap;justify-content:space-between;gap:1.2rem;align-items:baseline;
+      border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:.6rem
+    }
+    .tab-title{
+      font-size:1.2rem;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+    }
+    .tab-subtitle{font-size:.85rem;color:var(--muted);max-width:26rem}
+    .tab-body{
+      display:grid;
+      grid-template-columns:minmax(0,2.1fr) minmax(0,1.1fr);
+      gap:2.5rem;
+    }
+    @media (max-width:900px){.tab-body{grid-template-columns:1fr}}
+    .tab-card{
+      background:rgba(4,4,10,.9);
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 22px 60px rgba(0,0,0,.85);
+      position:relative;overflow:hidden;
+    }
+    .tab-card-inner{position:relative;padding:1.55rem 1.7rem 1.7rem;display:flex;flex-direction:column;gap:1.25rem}
+    .tab-card-title{
+      font-size:.9rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent)
+    }
+    .tab-card-text{font-size:.9rem;line-height:1.7;color:#d7d7eb}
+
+    .tab-chip-row{display:flex;flex-wrap:wrap;gap:.6rem;font-size:.75rem}
+    .tab-chip{
+      padding:.25rem .7rem;border-radius:999px;border:1px solid rgba(255,255,255,.16);
+      text-transform:uppercase;letter-spacing:.14em;color:var(--muted)
+    }
+
+    .events-list{display:flex;flex-direction:column;gap:1.1rem;font-size:.9rem}
+    .event-item{
+      display:flex;justify-content:space-between;gap:1.1rem;
+      padding:.55rem .3rem;border-bottom:1px dashed rgba(255,255,255,.18)
+    }
+    .event-item:last-child{border-bottom:none}
+    .event-main{display:flex;flex-direction:column;gap:.2rem}
+    .event-title{font-weight:600}
+    .event-meta{font-size:.78rem;color:var(--muted)}
+    .event-tag{font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;color:var(--accent)}
+
+    .timeline{position:relative;padding-left:1.5rem}
+    .timeline::before{
+      content:"";position:absolute;left:.4rem;top:0;bottom:0;width:2px;
+      background:linear-gradient(to bottom, var(--accent), rgba(255,255,255,.08));
+      box-shadow:0 0 18px rgba(0,255,170,.35)
+    }
+    .timeline-item{position:relative;padding-bottom:1.5rem}
+    .timeline-dot{
+      position:absolute;left:-.23rem;top:.2rem;width:10px;height:10px;border-radius:999px;
+      background:var(--accent);box-shadow:0 0 18px var(--accent)
+    }
+    .timeline-year{font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:var(--muted);margin-bottom:.1rem}
+    .timeline-title{font-size:.92rem;margin-bottom:.15rem}
+    .timeline-text{font-size:.88rem;color:#d7d7eb}
+
+    .footer{
+      border-top:1px solid rgba(255,255,255,.08);
+      background:#020208;
+      padding:.9rem 1.75rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:1rem;
+      align-items:center;
+      justify-content:space-between;
+      font-size:.78rem;
+      color:var(--muted);
+      z-index:10;
+    }
+    .footer-left{display:flex;align-items:center;gap:.5rem}
+    .footer-nav{display:flex;gap:.75rem;flex-wrap:wrap}
+    .footer-nav a{
+      color:var(--muted);text-decoration:none;text-transform:uppercase;letter-spacing:.16em;font-size:.7rem
+    }
+    .footer-nav a:hover{color:var(--accent)}
+    .footer-socials{display:flex;gap:.6rem}
+    .footer-socials a{
+      width:24px;height:24px;border-radius:999px;border:1px solid rgba(255,255,255,.3);
+      display:flex;align-items:center;justify-content:center;text-decoration:none;color:#f5f5f8;font-size:.76rem
+    }
+
+    .loading-overlay{
+      position:fixed;inset:0;z-index:99;
+      background:radial-gradient(circle at top, #121220, #020207 65%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      color:#f5f5f8;text-align:center;gap:1rem
+    }
+    .loading-logo{text-transform:uppercase;letter-spacing:.26em}
+    .loading-bar-wrapper{
+      width:220px;height:4px;border-radius:999px;border:1px solid rgba(255,255,255,.25);
+      overflow:hidden;background:rgba(0,0,0,.7)
+    }
+    .loading-bar{
+      height:100%;width:0%;
+      background:linear-gradient(90deg, var(--accent), #11ddff, #ff008c);
+      background-size:200% 100%;
+      animation:loadingGlow 1.2s linear infinite
+    }
+    @keyframes loadingGlow{0%{background-position:0 0}100%{background-position:200% 0}}
+    .loading-percent{text-transform:uppercase;letter-spacing:.18em;color:var(--muted);font-size:.75rem}
+
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(0,0,0,.86);
+      display:none;align-items:center;justify-content:center;z-index:90
+    }
+    .modal-backdrop.visible{display:flex;animation:fadeInBg .25s ease-out forwards}
+    @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
+
+    .modal{
+      position:relative;width:min(560px,94vw);border-radius:18px;overflow:hidden;
+      box-shadow:0 30px 90px rgba(0,0,0,.85);
+      animation:modalIn .28s cubic-bezier(.3,.9,.4,1.3) forwards;
+      background:#050509
+    }
+    @keyframes modalIn{
+      from{opacity:0;transform:scale(.86) translateY(12px)}
+      to{opacity:1;transform:scale(1) translateY(0)}
+    }
+    .modal.glitch{animation:glitchIn .3s steps(2,end) forwards}
+    @keyframes glitchIn{
+      0%{clip-path:inset(0 0 80% 0);transform:translate(-4px,-2px);opacity:0}
+      40%{clip-path:inset(30% 0 20% 0);transform:translate(4px,2px);opacity:1}
+      70%{clip-path:inset(5% 0 40% 0);transform:translate(-2px,0)}
+      100%{clip-path:inset(0 0 0 0);transform:translate(0,0)}
+    }
+    .modal-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:grayscale(.1) brightness(.6)}
+    .modal-overlay{position:absolute;inset:0;background:radial-gradient(circle at top, rgba(0,0,0,.45), rgba(0,0,0,.9))}
+    .modal-content{
+      position:relative;padding:2rem 1.75rem 1.75rem;display:flex;flex-direction:column;gap:1.4rem;color:#f5f5f8
+    }
+    .modal-title{
+      font-size:1rem;text-transform:uppercase;letter-spacing:.22em;color:var(--accent);
+      display:inline-flex;align-items:center;gap:.5rem
+    }
+    .modal-title::after{content:"▌";animation:cursorBlink .9s steps(1) infinite}
+    @keyframes cursorBlink{0%,50%{opacity:0}51%,100%{opacity:1}}
+    .modal-message{font-size:.95rem;line-height:1.7;text-shadow:0 0 22px rgba(0,0,0,.9)}
+    .modal-message.glitch-text{animation:textGlitch 1.4s infinite}
+    @keyframes textGlitch{
+      0%{text-shadow:2px 0 rgba(0,255,170,.6), -2px 0 rgba(255,0,128,.6)}
+      20%{text-shadow:-2px -1px rgba(0,255,170,.6), 2px 1px rgba(0,160,255,.6)}
+      40%{text-shadow:3px 1px rgba(255,0,128,.7), -3px -1px rgba(0,160,255,.7)}
+      60%{text-shadow:-1px 0 rgba(0,255,170,.6), 1px 0 rgba(255,0,128,.6)}
+      80%{text-shadow:2px -1px rgba(0,160,255,.6), -2px 1px rgba(255,0,128,.6)}
+      100%{text-shadow:2px 0 rgba(0,255,170,.6), -2px 0 rgba(255,0,128,.6)}
+    }
+    .modal-actions{display:flex;flex-wrap:wrap;gap:.8rem;justify-content:flex-end}
+    .modal-btn{
+      border-radius:999px;padding:.6rem 1.4rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.18em;
+      border:1px solid rgba(255,255,255,.55);background:rgba(0,0,0,.6);color:#f5f5f8;cursor:pointer
+    }
+    .modal-btn.yes{background:var(--accent);color:#050509;border-color:var(--accent);box-shadow:0 0 18px rgba(0,255,170,.8)}
+    .modal-btn.no{background:transparent;border-color:#ff335c;color:#ff335c;box-shadow:0 0 18px rgba(255,51,92,.7)}
+    .modal-btn.close{border-color:var(--accent);color:var(--accent);background:rgba(0,0,0,.8);box-shadow:var(--shadow)}
+
+    @media (max-width:700px){
+      .top-nav,.footer{padding:.75rem 1rem}
+      .variant-panel{align-items:flex-end}
+      .hero-title{letter-spacing:.22em}
+    }
+  </style>
 </head>
 <body>
 
-<!-- HERO -->
-<section class="hero">
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-logo">HACKIE3 / BOOTING</div>
+    <div class="loading-bar-wrapper">
+      <div class="loading-bar" id="loadingBar"></div>
+    </div>
+    <div class="loading-percent" id="loadingPercent">Loading 0%</div>
+  </div>
 
-    <video class="bg-video" autoplay muted loop playsinline preload="auto">
-        <source src="v.mp4" type="video/mp4">
+  <div class="hero-video-wrapper">
+    <video id="heroVideo" autoplay muted loop playsinline preload="auto">
+      <source src="./v.mp4" type="video/mp4">
     </video>
+  </div>
+  <div class="hero-overlay-gradient"></div>
 
-    <div class="video-overlay"></div>
+  <div class="app-root">
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="nav-logo-square">H3</div>
+        <span>Hackie3 Collective</span>
+      </div>
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-view="home">Hero</button>
+        <button class="nav-tab" data-view="about">About</button>
+        <button class="nav-tab" data-view="events">Events</button>
+        <button class="nav-tab" data-view="timeline">Timeline</button>
+      </nav>
+    </header>
 
-    <div class="hero-content">
-        <h1>HackIE³</h1>
-        <p>The Ultimate Hackathon Experience</p>
-        <button onclick="openArasaka()">Register Now</button>
-    </div>
+    <main class="views">
+      <section class="view active" id="view-home">
+        <div class="hero-root">
+          <div class="config-panel">
+            <div class="config-group">
+              <label for="cfgName">Name</label>
+              <input id="cfgName" class="config-input" type="text" placeholder="Hackie3">
+            </div>
+            <div class="config-group">
+              <label for="cfgSubtitle">Subtitle</label>
+              <input id="cfgSubtitle" class="config-input" type="text" placeholder="Hacker / Tech Collective">
+            </div>
+            <div class="config-group">
+              <label for="cfgDesc">Description</label>
+              <textarea id="cfgDesc" class="config-textarea" maxlength="240" placeholder="Dark, gloomy and neon."></textarea>
+            </div>
+            <div class="config-group">
+              <label for="cfgAccent">Theme</label>
+              <select id="cfgAccent" class="config-select">
+                <option value="#00ff9d">Neon Green</option>
+                <option value="#00f6ff">Neon Cyan</option>
+                <option value="#c400ff">Neon Purple</option>
+                <option value="#ff2255">Neon Red</option>
+              </select>
+            </div>
+          </div>
 
-</section>
+          <div class="hero-content" id="heroContent">
+            <div class="hero-left">
+              <div class="hero-label">
+                <span class="hero-label-dot"></span>
+                <span>Hacker / Tech Collective</span>
+              </div>
+              <h1 class="hero-title" id="heroName">HACKIE3</h1>
+              <div class="hero-subtitle" id="heroSubtitle">SIGNAL / STATIC / SURGE</div>
+              <p class="hero-description" id="heroDescription">
+                Dark, gloomy and neon. Hackie3 operates in the void between signal and static, where firewalls melt and cities run on stolen electricity.
+              </p>
+              <div class="hero-ctas">
+                <button class="btn btn-outline"><span>Watch Teaser</span></button>
+                <button class="btn btn-filled"><span>View Protocols</span></button>
+                <button class="btn btn-register" id="registerBtn"><span>Register</span></button>
+              </div>
+              <div class="hero-socials">
+                <span>Social</span>
+                <a href="#" aria-label="X / Twitter">X</a>
+                <a href="#" aria-label="Instagram">IG</a>
+                <a href="#" aria-label="GitHub">GH</a>
+              </div>
+            </div>
 
-<div class="hero-cover"></div>
-
-<!-- EVENTS -->
-<section class="events">
-    <h2>Events</h2>
-
-    <div class="event-grid">
-
-        <div class="event-card">
-            <h3>🔥 Code Infiltration</h3>
-            <p>Break into systems, build fast, hack faster.</p>
+            <div class="hero-right">
+              <div class="variant-panel">
+                <div class="variant-index"><span id="variantIndex">01</span></div>
+                <div class="variant-nav">
+                  <button class="variant-nav-btn" id="variantPrev"><span>Prev</span><span>↑</span></button>
+                  <div class="variant-line"></div>
+                  <button class="variant-nav-btn" id="variantNext"><span>Next</span><span>↓</span></button>
+                  <div id="variantLoader" style="display:none; font-size:.7rem; letter-spacing:.22em; text-transform:uppercase; color:var(--muted);">Loading</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div class="event-card">
-            <h3>🧠 AI Showdown</h3>
-            <p>Train models. Outthink competitors. Survive the algorithm war.</p>
+      <section class="view" id="view-about">
+        <div class="tab-inner">
+          <div class="tab-header">
+            <div class="tab-title">About / Hackie3</div>
+            <div class="tab-subtitle">Hackie3 is a distributed hacker collective building tools, breaking systems, and rewriting the rules of the grid.</div>
+          </div>
+          <div class="tab-body">
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Origin Signal</div>
+              <div class="tab-card-text">Born in dim basements and late-night IRC rooms, Hackie3 grew from a handful of curious intruders into a global swarm of exploit engineers, protocol designers and off-grid builders.</div>
+              <div class="tab-card-text">We move where networks are weakest and data is most valuable, orchestrating silent campaigns that challenge surveillance states, abusive platforms and brittle corporate stacks.</div>
+              <div class="tab-chip-row"><span class="tab-chip">Red Team</span><span class="tab-chip">Reverse Engineering</span><span class="tab-chip">Cyberpunk</span></div>
+            </div></div>
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Mission / Directive</div>
+              <div class="tab-card-text">Expose fragile infrastructure, weaponize knowledge, and keep the stack weird. Hackie3 trains new operators, runs underground tooling drops, and executes coordinated operations against exploit-rich targets.</div>
+              <div class="tab-card-text">If there is a firewall, we pressure-test it. If there is a closed protocol, we tear it open. We document, we ship, and we leave glowing footprints in the logs.</div>
+              <div class="tab-chip-row"><span class="tab-chip">CTFs</span><span class="tab-chip">Tooling</span><span class="tab-chip">Infra Ops</span></div>
+            </div></div>
+          </div>
         </div>
+      </section>
 
-        <div class="event-card">
-            <h3>⚡ Midnight Debug Run</h3>
-            <p>When everything breaks at 3 AM — only legends fix it.</p>
+      <section class="view" id="view-events">
+        <div class="tab-inner">
+          <div class="tab-header">
+            <div class="tab-title">Events / Operations</div>
+            <div class="tab-subtitle">Scheduled breaches, meetups and capture-the-flag nights where operators trade exploits, share tools and stress-test each other’s stacks.</div>
+          </div>
+          <div class="tab-body">
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Upcoming Ops</div>
+              <div class="events-list">
+                <div class="event-item"><div class="event-main"><div class="event-title">Night City Raid / 0x01</div><div class="event-meta">Hybrid CTF · On-site + Remote</div></div><div class="event-meta"><div>May 2026</div><div class="event-tag">CTF</div></div></div>
+                <div class="event-item"><div class="event-main"><div class="event-title">Firmware Funeral</div><div class="event-meta">Router exploitation lab · BYO hardware</div></div><div class="event-meta"><div>June 2026</div><div class="event-tag">Workshop</div></div></div>
+                <div class="event-item"><div class="event-main"><div class="event-title">Darkline Summit</div><div class="event-meta">Closed-door threat intel and tooling summit</div></div><div class="event-meta"><div>August 2026</div><div class="event-tag">Summit</div></div></div>
+              </div>
+            </div></div>
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Past Traces</div>
+              <div class="events-list">
+                <div class="event-item"><div class="event-main"><div class="event-title">Voltage Jam</div><div class="event-meta">Live exploit coding marathon</div></div><div class="event-meta"><div>2025</div><div class="event-tag">Jam</div></div></div>
+                <div class="event-item"><div class="event-main"><div class="event-title">Packet Ghosts</div><div class="event-meta">Network forensics and deception lab</div></div><div class="event-meta"><div>2024</div><div class="event-tag">Lab</div></div></div>
+                <div class="event-item"><div class="event-main"><div class="event-title">Terminal Choir</div><div class="event-meta">City-wide SSH banner art installation</div></div><div class="event-meta"><div>2023</div><div class="event-tag">Art</div></div></div>
+              </div>
+            </div></div>
+          </div>
         </div>
+      </section>
 
-    </div>
-</section>
+      <section class="view" id="view-timeline">
+        <div class="tab-inner">
+          <div class="tab-header">
+            <div class="tab-title">Timeline / Lore</div>
+            <div class="tab-subtitle">From a private channel with four ghosts to a distributed swarm of operators embedded across cities, datacenters and off-grid bunkers.</div>
+          </div>
+          <div class="tab-body">
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Milestones</div>
+              <div class="timeline">
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2021 / Boot</div><div class="timeline-title">Hackie3 channel created</div><div class="timeline-text">Four operators, one private relay, and a shared drive full of half-finished exploits and cursed prototypes.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2023 / Amplify</div><div class="timeline-title">First public CTF win</div><div class="timeline-text">“Hackie3” appears on leaderboards, then in logs, then in SOC reports. Recruitment quietly accelerates.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2024 / Split</div><div class="timeline-title">Cells go distributed</div><div class="timeline-text">The collective fragments into semi-autonomous cells sharing implants, droppers and telemetry via encrypted dead-drops.</div></div>
+                <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-year">2025 / Signal Flood</div><div class="timeline-title">Tooling leaks to the wild</div><div class="timeline-text">Custom recon suites and privilege-escalation chains surface in random Git repos and pastebins, tagged only with “H3”.</div></div>
+              </div>
+            </div></div>
+            <div class="tab-card"><div class="tab-card-inner">
+              <div class="tab-card-title">Next Packet</div>
+              <div class="tab-card-text">The next phase of Hackie3 is about building infrastructure rather than simply breaking it: resilient mesh networks, community labs, and tools that put offensive capability into the hands of small crews.</div>
+              <div class="tab-card-text">If the existing stack feels hostile, fragile or boring, you are probably part of the reason Hackie3 exists.</div>
+              <div class="tab-chip-row"><span class="tab-chip">Mesh</span><span class="tab-chip">DIY Infra</span><span class="tab-chip">Community Labs</span></div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+    </main>
 
-<!-- ABOUT -->
-<section class="about">
-    <h2>About</h2>
-    <p>A 24-hour hackathon where innovation meets creativity.</p>
-</section>
+    <footer class="footer">
+      <div class="footer-left">
+        <div class="nav-logo-square">H3</div>
+        <span>Hackie3 Collective · Night City</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="#" data-view-link="about">About</a>
+        <a href="#" data-view-link="events">Events</a>
+        <a href="#" data-view-link="timeline">Timeline</a>
+        <a href="#">Contact</a>
+      </nav>
+      <div class="footer-socials">
+        <a href="#">X</a>
+        <a href="#">IG</a>
+        <a href="#">GH</a>
+      </div>
+    </footer>
+  </div>
 
-<!-- FEATURES -->
-<section class="features">
-    <h2>Highlights</h2>
-</section>
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"></div>
 
-<footer>
-    <p>© 2026 HackIE³</p>
-</footer>
+  <script>
+    const variants = [
+      {
+        name: "HACKIE3",
+        subtitle: "SIGNAL / STATIC / SURGE",
+        description: "Dark, gloomy and neon. Hackie3 operates in the void between signal and static, where firewalls melt and cities run on stolen electricity.",
+        accent: "#00ff9d",
+        video: "v.mp4"
+      },
+      {
+        name: "HACKIE3 / GHOSTLINE",
+        subtitle: "NOISE RIDERS / LOG CARVERS",
+        description: "Ghostline cell lives inside packet captures and corrupted backups, mapping forgotten traffic and rerouting it through their own haunted routers.",
+        accent: "#00f6ff",
+        video: "v.mp4"
+      },
+      {
+        name: "HACKIE3 / VOIDSTACK",
+        subtitle: "STACK OVERFLOW / STACK REWRITE",
+        description: "Voidstack rewires runtimes, swaps binaries mid-flight and leaves exploit chains that feel less like bugs and more like folklore.",
+        accent: "#c400ff",
+        video: "v.mp4"
+      }
+    ];
 
-<!-- POPUP 1 -->
-<div id="modal1" class="modal">
-    <div class="modal-content" id="modal1Content">
+    let currentVariantIndex = 0;
+    const heroVideo = document.getElementById("heroVideo");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const loadingBar = document.getElementById("loadingBar");
+    const loadingPercent = document.getElementById("loadingPercent");
+    const heroContent = document.getElementById("heroContent");
+    const variantIndexEl = document.getElementById("variantIndex");
+    const variantLoader = document.getElementById("variantLoader");
 
-        <h2>Ready to hack your way into Arasaka?</h2>
+    const cfgName = document.getElementById("cfgName");
+    const cfgSubtitle = document.getElementById("cfgSubtitle");
+    const cfgDesc = document.getElementById("cfgDesc");
+    const cfgAccent = document.getElementById("cfgAccent");
 
-        <button onclick="choose(true)">
-            Yes, Arasaka must be destroyed.
-        </button>
+    function setAccent(color){
+      document.documentElement.style.setProperty("--accent", color);
+    }
 
-        <button onclick="choose(false)">
-            No, long live Night City!
-        </button>
+    function applyVariant(index){
+      const v = variants[index];
+      document.getElementById("heroName").textContent = v.name;
+      document.getElementById("heroSubtitle").textContent = v.subtitle;
+      document.getElementById("heroDescription").textContent = v.description;
+      variantIndexEl.textContent = String(index + 1).padStart(2, "0");
+      setAccent(v.accent);
+      cfgName.value = "";
+      cfgSubtitle.value = "";
+      cfgDesc.value = "";
+    }
 
-    </div>
-</div>
+    function switchVariant(offset){
+      const next = (currentVariantIndex + offset + variants.length) % variants.length;
+      if (next === currentVariantIndex) return;
+      currentVariantIndex = next;
+      variantLoader.style.display = "block";
+      heroContent.classList.add("fading");
 
-<!-- POPUP 2 -->
-<div id="modal2" class="modal">
-    <div class="modal-content" id="modal2Content">
-        <h2 id="finalText"></h2>
-        <button onclick="closeAll()">Close</button>
-    </div>
-</div>
+      const source = heroVideo.querySelector("source");
+      const newSrc = variants[currentVariantIndex].video;
 
-<script src="script.js"></script>
+      setTimeout(() => {
+        if (source.getAttribute("src") !== newSrc) {
+          source.setAttribute("src", newSrc);
+          heroVideo.load();
+        }
+        applyVariant(currentVariantIndex);
+        setTimeout(() => {
+          heroContent.classList.remove("fading");
+          variantLoader.style.display = "none";
+        }, 180);
+      }, 180);
+    }
+
+    document.getElementById("variantPrev").addEventListener("click", () => switchVariant(-1));
+    document.getElementById("variantNext").addEventListener("click", () => switchVariant(1));
+
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+    let targetTime = 0;
+    let currentTime = 0;
+    let videoDuration = 0;
+    let ticking = false;
+
+    function animateVideo(){
+      const diff = targetTime - currentTime;
+      currentTime += diff * 0.12;
+      if (Math.abs(diff) < 0.01) currentTime = targetTime;
+      if (videoDuration) heroVideo.currentTime = clamp(currentTime, 0, Math.max(0, videoDuration - 0.05));
+      if (Math.abs(targetTime - currentTime) > 0.01) {
+        requestAnimationFrame(animateVideo);
+      } else {
+        ticking = false;
+      }
+    }
+
+    function updateScrollTarget(){
+      if (!videoDuration) return;
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = docHeight > 0 ? clamp(scrollTop / docHeight, 0, 1) : 0;
+      targetTime = progress * videoDuration;
+      if (!ticking){
+        ticking = true;
+        requestAnimationFrame(animateVideo);
+      }
+    }
+
+    heroVideo.addEventListener("loadedmetadata", () => {
+      videoDuration = heroVideo.duration || 0;
+      heroVideo.pause();
+      updateScrollTarget();
+    });
+
+    window.addEventListener("scroll", updateScrollTarget, { passive:true });
+    window.addEventListener("resize", updateScrollTarget);
+
+    function preloadAssets(){
+      const assetPaths = ["v.mp4", "ar.jpeg", "d2.jpeg", "A2.jpeg"];
+      let loadedCount = 0;
+      const total = assetPaths.length;
+
+      function updateProgress(){
+        loadedCount++;
+        const percent = Math.round((loadedCount / total) * 100);
+        loadingBar.style.width = percent + "%";
+        loadingPercent.textContent = "Loading " + percent + "%";
+        if (loadedCount >= total){
+          setTimeout(() => {
+            loadingOverlay.style.opacity = "0";
+            setTimeout(() => {
+              loadingOverlay.style.display = "none";
+            }, 300);
+          }, 350);
+        }
+      }
+
+      assetPaths.forEach((path) => {
+        if (path.endsWith(".mp4")) {
+          const vid = document.createElement("video");
+          vid.src = path;
+          vid.preload = "auto";
+          vid.oncanplaythrough = updateProgress;
+          vid.onerror = updateProgress;
+        } else {
+          const img = new Image();
+          img.src = path;
+          img.onload = updateProgress;
+          img.onerror = updateProgress;
+        }
+      });
+    }
+
+    const navTabs = document.querySelectorAll(".nav-tab");
+    const views = document.querySelectorAll(".view");
+
+    function setView(viewId){
+      views.forEach(v => v.classList.toggle("active", v.id === "view-" + viewId));
+      navTabs.forEach(t => t.classList.toggle("active", t.dataset.view === viewId));
+    }
+
+    navTabs.forEach(tab => tab.addEventListener("click", () => setView(tab.dataset.view)));
+    document.querySelectorAll("[data-view-link]").forEach(link => {
+      link.addEventListener("click", e => {
+        e.preventDefault();
+        setView(link.getAttribute("data-view-link"));
+      });
+    });
+
+    cfgName.addEventListener("input", () => {
+      const value = cfgName.value.trim();
+      document.getElementById("heroName").textContent = value ? value.toUpperCase() : variants[currentVariantIndex].name;
+    });
+    cfgSubtitle.addEventListener("input", () => {
+      const value = cfgSubtitle.value.trim();
+      document.getElementById("heroSubtitle").textContent = value ? value.toUpperCase() : variants[currentVariantIndex].subtitle;
+    });
+    cfgDesc.addEventListener("input", () => {
+      const value = cfgDesc.value.trim();
+      document.getElementById("heroDescription").textContent = value ? value : variants[currentVariantIndex].description;
+    });
+    cfgAccent.addEventListener("change", () => setAccent(cfgAccent.value));
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    let currentModalStep = null;
+
+    function closeModal(){
+      modalBackdrop.innerHTML = "";
+      modalBackdrop.classList.remove("visible");
+      currentModalStep = null;
+    }
+
+    function showModal({ bg, message, yesNo, yesCallback, noCallback }){
+      modalBackdrop.innerHTML = "";
+      modalBackdrop.classList.add("visible");
+      currentModalStep = true;
+
+      const modal = document.createElement("div");
+      modal.className = "modal glitch";
+
+      const bgDiv = document.createElement("div");
+      bgDiv.className = "modal-bg";
+      bgDiv.style.backgroundImage = `url('${bg}')`;
+
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+
+      const content = document.createElement("div");
+      content.className = "modal-content";
+
+      const title = document.createElement("div");
+      title.className = "modal-title";
+      title.textContent = "HACKIE3 / ACCESS";
+
+      const msg = document.createElement("div");
+      msg.className = "modal-message";
+      msg.textContent = message;
+
+      const actions = document.createElement("div");
+      actions.className = "modal-actions";
+
+      if (yesNo){
+        msg.classList.add("glitch-text");
+        const yesBtn = document.createElement("button");
+        yesBtn.className = "modal-btn yes";
+        yesBtn.textContent = "YES";
+        yesBtn.onclick = () => yesCallback && yesCallback();
+
+        const noBtn = document.createElement("button");
+        noBtn.className = "modal-btn no";
+        noBtn.textContent = "NO";
+        noBtn.onclick = () => noCallback && noCallback();
+
+        actions.appendChild(yesBtn);
+        actions.appendChild(noBtn);
+      } else {
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "modal-btn close";
+        closeBtn.textContent = "CLOSE";
+        closeBtn.onclick = closeModal;
+        actions.appendChild(closeBtn);
+      }
+
+      content.appendChild(title);
+      content.appendChild(msg);
+      content.appendChild(actions);
+      modal.appendChild(bgDiv);
+      modal.appendChild(overlay);
+      modal.appendChild(content);
+      modalBackdrop.appendChild(modal);
+    }
+
+    document.getElementById("registerBtn").addEventListener("click", () => {
+      showModal({
+        bg: "ar.jpeg",
+        message: "Ready to hack your way into Arasaka?",
+        yesNo: true,
+        yesCallback: () => showModal({
+          bg: "d2.jpeg",
+          message: "Arasaka is falling. Night City will remember you.",
+          yesNo: false
+        }),
+        noCallback: () => showModal({
+          bg: "A2.jpeg",
+          message: "You chose survival... Night City continues.",
+          yesNo: false
+        })
+      });
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && currentModalStep) closeModal();
+    });
+
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop && currentModalStep) closeModal();
+    });
+
+    window.addEventListener("load", () => {
+      applyVariant(currentVariantIndex);
+      preloadAssets();
+    });
+  </script>
 </body>
 </html>
